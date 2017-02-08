@@ -20,7 +20,7 @@ tasks.withType(JavaCompile) {
 
 task createMyAppContainer(type: DockerCreateContainer) {
     targetImageId { 'postgres:9.5' }
-    portBindings = ['5432:5432']
+    portBindings = [':5432']
 }
 
 task startMyAppContainer(type: DockerStartContainer) {
