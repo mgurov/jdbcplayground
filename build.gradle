@@ -1,5 +1,5 @@
 apply plugin: 'java'
-apply plugin: 'maven'
+//apply plugin: 'maven'
 apply plugin: 'com.bmuschko.docker-remote-api'
 
 import com.bmuschko.gradle.docker.tasks.container.*
@@ -32,8 +32,17 @@ task stopMyAppContainer(type: DockerStopContainer) {
     targetContainerId { createMyAppContainer.getContainerId() }
 }
 
+task inspect(type: DockerInspectContainer) {
+    dependsOn startMyAppContainer
+    targetContainerId { createMyAppContainer.getContainerId() }
+    onNext {
+        println "PORTS: ${it.networkSettings.ports}"
+    }
+}
+
 task functionalTestMyApp(type: Test) {
     dependsOn startMyAppContainer
+    dependsOn inspect
     finalizedBy stopMyAppContainer
 }
 
