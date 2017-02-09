@@ -18,9 +18,12 @@ tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 
+def portToSystemPropertyKey = [5432 : "pg.port"]
+
 task createMyAppContainer(type: DockerCreateContainer) {
     targetImageId { 'postgres:9.5' }
-    portBindings = [':5432']
+
+    portBindings = portToSystemPropertyKey.collect {port, hostSysProp -> "${System.getProperty(hostSysProp, '')}:${port}"}
 }
 
 task startMyAppContainer(type: DockerStartContainer) {
@@ -36,11 +39,22 @@ task inspect(type: DockerInspectContainer) {
     dependsOn startMyAppContainer
     targetContainerId { createMyAppContainer.getContainerId() }
     onNext {
-        println "PORTS: ${it.networkSettings.ports}"
+        println "PORTS expected: ${portToSystemPropertyKey}"
+        println "PORTS actual: ${it.networkSettings.ports}"
+        it.networkSettings.ports.getBindings().each { exposedPort, bindingArr ->
+
+            def sysPropertyKey = portToSystemPropertyKey[exposedPort.getPort()]
+            if ('' != sysPropertyKey) {
+                println sysPropertyKey
+                bindingArr.each { System.setProperty(sysPropertyKey, it.getHostPortSpec()) }
+            }
+        }
+
+        println portToSystemPropertyKey.collect{ k, v -> "${k} -> ${System.getProperty(v)}" }
     }
 }
 
-task functionalTestMyApp(type: Test) {
+task functionalTestMyApp(/*type: Test*/) {
     dependsOn startMyAppContainer
     dependsOn inspect
     finalizedBy stopMyAppContainer
@@ -73,3 +87,5 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version:'4.11'
     testCompile group: 'com.jayway.restassured', name: 'rest-assured', version:'2.3.1'
 }
+
+// TODO: remove container on build failure?
