@@ -40,7 +40,7 @@ task inspect(type: DockerInspectContainer) {
     }
 }
 
-task functionalTestMyApp(type: Test) {
+task functionalTestMyApp(/*type: Test*/) {
     dependsOn startMyAppContainer
     dependsOn inspect
     finalizedBy stopMyAppContainer
