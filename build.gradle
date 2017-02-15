@@ -18,7 +18,7 @@ tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 
-def portToSystemPropertyKey = [5432 : "pg.port"]
+def portToSystemPropertyKey = [5432 : "postgres_port"]
 
 task createMyAppContainer(type: DockerCreateContainer) {
     targetImageId { 'postgres:9.5' }
@@ -59,6 +59,11 @@ task functionalTestMyApp(/*type: Test*/) {
     dependsOn inspect
     finalizedBy stopMyAppContainer
 }
+
+test.dependsOn startMyAppContainer
+test.dependsOn inspect
+test.finalizedBy stopMyAppContainer
+test.testLogging.showStandardStreams = true
 
 buildscript {
     repositories {
