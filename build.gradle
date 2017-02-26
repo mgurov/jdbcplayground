@@ -46,11 +46,17 @@ task inspect(type: DockerInspectContainer) {
             def sysPropertyKey = portToSystemPropertyKey[exposedPort.getPort()]
             if ('' != sysPropertyKey) {
                 println sysPropertyKey
-                bindingArr.each { System.setProperty(sysPropertyKey, it.getHostPortSpec()) }
+
+                bindingArr.each {
+                    def hostPortSpec = it.getHostPortSpec()
+                    tasks.withType(Test) {
+                        println ">>>>>>>>>>>>>> setting the system property ${sysPropertyKey}"
+                        systemProperty sysPropertyKey, hostPortSpec
+                    }
+
+                }
             }
         }
-
-        println portToSystemPropertyKey.collect{ k, v -> "${k} -> ${System.getProperty(v)}" }
     }
 }
 
